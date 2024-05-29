@@ -28,7 +28,7 @@ const HeaderRoutes = () => {
 					</Button>
 				</Link>
 			)}
-			<UserButton afterSignOutUrl="/" />
+			<UserButton />
 		</div>
 	);
 };

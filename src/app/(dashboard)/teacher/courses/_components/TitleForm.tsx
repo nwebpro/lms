@@ -1,23 +1,29 @@
 'use client';
 
-import * as z from 'zod';
-import axios from 'axios';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
+import * as z from 'zod';
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
-	FormLabel,
 	FormMessage,
 	FormItem,
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { Pencil } from 'lucide-react';
+import { useState } from 'react';
+
+interface TitleFormProps {
+	initialData: {
+		title: string;
+	};
+	courseId: string;
+}
 
 const formSchema = z.object({
 	title: z.string().min(1, {
@@ -25,46 +31,56 @@ const formSchema = z.object({
 	}),
 });
 
-const CourseCreate = () => {
+const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
 	const router = useRouter();
+	const [isEditing, setIsEditing] = useState(false);
+
+	const toggleEditTitle = () => setIsEditing((current) => !current);
+
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
-		defaultValues: {
-			title: '',
-		},
+		defaultValues: initialData,
 	});
 
 	const { isSubmitting, isValid } = form.formState;
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
-			const res = await axios.post('/api/courses', values);
-			router.push(`/teacher/courses/${res.data.id}`);
-			toast.success('Course created!');
+			await axios.patch(`/api/courses/${courseId}`, values);
+			toast.success('Course Updated!');
+			toggleEditTitle();
+			router.refresh();
 		} catch {
 			toast.error('Something went wrong!');
 		}
 	};
 
 	return (
-		<div className="max-w-5xl mx-auto flex md:items-center md:justify-center h-full p-6">
-			<div>
-				<h1 className="text-2xl">Name Your Course</h1>
-				<p>
-					Lorem ipsum dolor sit amet consectetur adipisicing elit.
-					Soluta esse dolorum consequatur animi earum aperiam
-					asperiores tenetur natus ipsum! Dolores!
-				</p>
+		<div className="mt-6 border bg-slate-100 rounded-md p-4">
+			<div className="font-medium flex items-center justify-between">
+				Course Title
+				<Button onClick={toggleEditTitle} variant="ghost">
+					{isEditing ? (
+						<>Cancel</>
+					) : (
+						<>
+							<Pencil className="h-4 w-4 mr-2" />
+							Edit Title
+						</>
+					)}
+				</Button>
+			</div>
+			{!isEditing && <p className="text-sm mt-2">{initialData?.title}</p>}
+			{isEditing && (
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(onSubmit)}
-						className="space-y-8"
+						className="space-y-4 mt-4"
 					>
 						<FormField
 							control={form.control}
 							name="title"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Title</FormLabel>
 									<FormControl>
 										<Input
 											disabled={isSubmitting}
@@ -72,32 +88,23 @@ const CourseCreate = () => {
 											placeholder="e.g. 'Advanced web development'"
 										/>
 									</FormControl>
-									<FormDescription>
-										What will you teach in this course?
-									</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
 						<div className="flex items-center gap-x-2">
-							<Link href={'/'}>
-								<Button variant="ghost" type="button">
-									Cancel
-								</Button>
-							</Link>
-
 							<Button
 								disabled={isSubmitting || !isValid}
 								type="submit"
 							>
-								Create Course
+								Save
 							</Button>
 						</div>
 					</form>
 				</Form>
-			</div>
+			)}
 		</div>
 	);
 };
 
-export default CourseCreate;
+export default TitleForm;

@@ -1,5 +1,6 @@
 import Header from './_components/Header';
 import Sidebar from './_components/Sidebar';
+import "@uploadthing/react/styles.css";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 	return (
